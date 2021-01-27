@@ -4,7 +4,6 @@ import obspy
 import pandas as pd
 from scipy.signal import spectrogram
 
-
 class Sac:
     """
     Class encapsulating the contents of a single .sac file, assuming that each file has just 1 trace.
@@ -93,6 +92,7 @@ class Sac:
         
         self.st.plot(starttime = start_time, endtime = end_time)
         plt.show()
+
     #====================pd.DataFrame functions====================
     def make_df(self, start_time=None, end_time=None, column_name = None):
         """
