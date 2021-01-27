@@ -1,6 +1,5 @@
 # seismic_analysis_tools
 
-
 # Python Files
 # 1. Sac.py
 #    Functions to read .sac files, and to handle them using pandas in python.
