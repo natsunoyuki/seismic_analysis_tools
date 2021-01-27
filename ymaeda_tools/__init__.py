@@ -3,6 +3,7 @@
 # This set of tools are meant to be used with the seismic inversion programs written by Dr. Yuta Maeda of Nagoya university.
 # The original set of programs are referred to as YMAEDA_TOOLS which is written in C.
 
+# Python files
 # 1. dft.py
 #    Functions associated with the discrete Fourier transform functions used in the original C code.
 # 2. inversion.py
