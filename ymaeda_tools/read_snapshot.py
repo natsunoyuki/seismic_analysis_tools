@@ -162,7 +162,7 @@ def read_snapshot_loc3D(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, 
     i = 0
     j = ['x','y','z']
     for k in j:
-        t, g[:,i] = read_snapshot_loc(snapshot_dir, k, X, Y, Z, t0, t1, dt)
+        t, g[:, i] = read_snapshot_loc(snapshot_dir, k, X, Y, Z, t0, t1, dt)
         i = i + 1
     return t, g
 

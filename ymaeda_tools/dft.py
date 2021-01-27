@@ -11,8 +11,8 @@ F = np.arange(0, df*4096, df)
 
 def idft(X):
     """
-    this DFT was constructed to match that used in YMAEDA_TOOLS and is
-    different from the version used by MATLAB, SCIPY etc.
+    This DFT was constructed to match that used in YMAEDA_TOOLS and is
+    different from the version used in MATLAB, SCIPY etc.
     This uses the traditional DFT algorithm which is very slow due to having
     2 for loops, and can definitely be made faster by using symmetry...
     """
@@ -25,8 +25,8 @@ def idft(X):
 
 def dft(X):
     """
-    this DFT was constructed to match that used in YMAEDA_TOOLS and is
-    different from the version used by MATLAB, SCIPY etc.
+    This DFT was constructed to match that used in YMAEDA_TOOLS and is
+    different from the version used in MATLAB, SCIPY etc.
     This uses the traditional DFT algorithm which is very slow due to having
     2 for loops, and can definitely be made faster by using symmetry...
     """
@@ -39,7 +39,7 @@ def dft(X):
 
 def timeshift(mest, D):
     """
-    time shift a Fourier transform by some integer value D
+    Time shift a Fourier transform by some integer value D
     for use on the non-complex arrays output by YMAEDA_TOOLS
     warning! Use this only on full range Fourier transforms...
     """
@@ -54,7 +54,7 @@ def timeshift(mest, D):
     
 def timeshift_cplx(mest, D):
     """
-    time shift a Fourier transform by some integer value D
+    Time shift a Fourier transform by some integer value D
     for use on complex python arrays
     warning! Use this only on full range Fourier transforms...
     """
@@ -66,7 +66,7 @@ def timeshift_cplx(mest, D):
 
 def exifft(M, DATLEN = 2049):
     """
-    extends the data to full frequency range and perform ifft
+    Extends the data to full frequency range and perform ifft
     for use on non-complex arrays output by YMAEDA_TOOLS
     """
     M = M[:, 0] + M[:, 1] * 1j #combine real and imag parts together
@@ -81,7 +81,7 @@ def exifft(M, DATLEN = 2049):
 
 def exifft_cplx(M, DATLEN = 2049):
     """
-    extends the data to full frequency range and perform ifft
+    Extends the data to full frequency range and perform ifft
     for use on complex python arrays
     """
     M2 = M[1:DATLEN - 1]
@@ -93,7 +93,7 @@ def exifft_cplx(M, DATLEN = 2049):
 
 def exifft_timeshift(M, D, DATLEN = 2049):
     """
-    extend and inverse Fourier transform for non-complex matrices
+    Extend and inverse Fourier transform for non-complex matrices
     as the output by winv from YMAEDA_TOOLS only contains the first half
     of the frequency range up to Nyquist frequency, the data has to be
     extended into the complex conjugate half before ifft is performed.
@@ -110,7 +110,7 @@ def exifft_timeshift(M, D, DATLEN = 2049):
 
 def exifft_cplx_timeshift(M, D, DATLEN = 2049):
     """
-    extend and inverse Fourier transform for complex arrays
+    Extend and inverse Fourier transform for complex arrays.
     """
     M2 = M[1:DATLEN - 1]
     M2 = np.flipud(M2) #flip the order due to [1:2047]=conj([4095:2049])
