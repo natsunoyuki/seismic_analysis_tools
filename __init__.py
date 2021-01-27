@@ -3,7 +3,8 @@
 # Directories
 # -----------
 # 1. sac_tools
-#    A set of python codes which uses the obspy library to deal with .sac data. In particular, the codes in this directory allow for quick conversion to pd.DataFrames for a more pythonic seismic data analysis.
+#    A set of python codes which uses the obspy library to deal with .sac data. 
+     In particular, the codes in this directory allow for quick conversion to pd.DataFrames for a more pythonic seismic data analysis.
 # 2. ymaeda_tools
 #    A set of python codes associated with the linear inversion C code (YMAEDA_TOOLS) written originally by Dr. Yuta Maeda of Nagoya University.
 
