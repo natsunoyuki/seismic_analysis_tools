@@ -1,7 +1,7 @@
 import numpy as np
 import struct #for dealing with binary data
 
-# Functions for loading d, G and m files output by YMAEDA_TOOLS.
+# Functions for loading d_obs.cv, G.dbm and m_est.cv files output by YMAEDA_TOOLS.
 
 # frequency step size used by YMAEDA_TOOLS
 df = 0.002441406 
@@ -10,14 +10,17 @@ f = np.arange(0, df*2049, df)
 # frequency full space used by YMAEDA_TOOLS
 F = np.arange(0, df*4096, df) 
 
-# Matrix output from YMAEDA_TOOLS winv
-# ------------------------------------
-# d_obs.cv, m_est.cv and G.bdm are output as complex data files.
+# Output files from YMAEDA_TOOLS winv linear inversion algorithm
+# --------------------------------------------------------------
+# d_obs.cv, m_est.cv and G.dbm are output as "complex number" data files.
 #
 # In linear inversion we assume that the following relation holds:
 # d = G.m <==> m = inv(G).d
 # 
-# If N = 6 (6 seismogram traces) and M = 1 (1 moment tensor element), 
+# We first look at the case where we only have 1 moment tensor element
+# which is common in the case of geometrically constrained linear inversions.
+#
+# Take for example N = 6 (6 seismogram traces) and M = 1 (1 moment tensor element), 
 # then d = [6 x 1], m = [1 x 1] and G = [6 x 1] in shape.
 # 
 # The inversion is conducted in complex frequency space with the following forms:
@@ -25,37 +28,72 @@ F = np.arange(0, df*4096, df)
 # m = m_real + m_imag * 1j
 # G_i = G_i_real + G_i_imag * 1j
 
-# Therefore, d_i_real + d_i_imag * 1j = (G_i_real + G_i_imag * 1j) * (m_real + m_imag * 1j) = 
+# Therefore, the complex vector d_i can be written in terms of G_i and m as :
+# d_i_real + d_i_imag * 1j = (G_i_real + G_i_imag * 1j) * (m_real + m_imag * 1j) = 
 # G_i_real * m_real + G_i_real * m_imag * 1j + G_i_imag * m_real * 1j - G_i_imag * m_imag = 
 # (G_i_real * m_real - G_i_imag * m_imag) + (G_i_real * m_imag + G_i_imag * m_real) * 1j.
-# This can be written in matrix form as: 
+#
+# The equation above can be written in matrix form as: 
 # d_i_real          G_i_real       -G_i_imag         m_real
 #                =                                .  
 # d_i_imag * 1j     G_i_imag * 1j  G_i_real * 1j     m_imag
 #  
 # From the above matrix forms, the corresponding files have the contents: 
-#           d_1_real        G_1_real -G_1_imag
-#           d_2_real        G_2_real -G_2_imag
-#           d_3_real        G_3_real -G_3_imag
-#           d_4_real        G_4_real -G_4_imag
-#           d_5_real        G_5_real -G_5_imag           m_real
-# d_obs.cv: d_6_real G.bdm: G_6_real -G_6_imag m_est.cv: m_imag
-#           d_1_imag        G_1_imag  G_1_real
-#           d_2_imag        G_2_imag  G_2_real
-#           d_3_imag        G_3_imag  G_3_real
-#           d_4_imag        G_4_imag  G_4_real
-#           d_5_imag        G_5_imag  G_5_real
-#           d_6_imag        G_6_imag  G_6_real
-#           [12 x 1]            [12 x 2]                 [2 x 1]
+#           d_1_real         G_1_real, -G_1_imag
+#           d_2_real         G_2_real, -G_2_imag
+#           d_3_real         G_3_real, -G_3_imag
+#           d_4_real         G_4_real, -G_4_imag
+#           d_5_real         G_5_real, -G_5_imag           
+# d_obs.cv: d_6_real  G.bdm: G_6_real, -G_6_imag  m_est.cv: m_real
+#           d_1_imag         G_1_imag,  G_1_real            m_imag
+#           d_2_imag         G_2_imag,  G_2_real
+#           d_3_imag         G_3_imag,  G_3_real
+#           d_4_imag         G_4_imag,  G_4_real
+#           d_5_imag         G_5_imag,  G_5_real
+#           d_6_imag         G_6_imag,  G_6_real
+#           [12 x 1]              [12 x 2]                  [2 x 1]
 #
-# There will be 2 singular values in Lambda, one for the real part of m and one for the imag part.
+# There will be 2 singular values in the SVD eigenvalue matrix, one for the real part of m and one for the imag part.
 # Both singular values are treated as essentially real by splitting x + jy into x and y seperately.
 # 
-# To convert from YMAEDA_TOOLS format to something more familiar in python, 
-# the following conversion equations are used:
+# To convert from YMAEDA_TOOLS format to something more familiar in python, the following conversion equations are used:
 # d_py = d_obs[:len(d_obs)/2] + d_obs[len(d_obs)/2:] * 1j
 # G_py = G.bdm[:len(d_obs)/2, 0] - G.bdm[len(d_obs)/2:, 1] * 1j
 # m_py = m[0] + m[1] * 1j
+#
+# Now that we have solved the simple case where M = 1, we can extend the formalism to the full case
+# where M = 6 (there are 6 independent components in the seismic moment tensor: Mxx, Myy, Mzz, Mxy, Myz, Mxz).
+#
+# For the full case, the complex d_i values can be written in terms of G_ij and m_j as:
+# d_i_real = G_i1_real * m_1_real + G_i2_real * m_2_real + G_i3_real * m_3_real + 
+#            G_i4_real * m_4_real + G_i5_real * m_5_real + G_i6_real * m_6_real + 
+#           -G_i1_imag * m_1_imag - G_i2_imag * m_2_imag - G_i2_imag * m_2_imag +
+#           -G_i4_imag * m_4_imag - G_i5_imag * m_5_imag - G_i6_imag * m_6_imag
+#
+# d_i_imag = G_i1_imag * m_1_real + G_i2_imag * m_2_real + G_i3_imag * m_3_real + 
+#            G_i4_imag * m_4_real + G_i5_imag * m_5_real + G_i6_imag * m_6_real + 
+#            G_i1_real * m_1_imag + G_i2_real * m_2_imag + G_i2_real * m_2_imag +
+#            G_i4_real * m_4_imag + G_i5_real * m_5_imag + G_i6_real * m_6_imag
+#
+# Using the equation above, the corresponding files have the contents: 
+#           d_1_real         G_11_real, ... G_16_real, -G_11_imag, ... -G_16_imag            m_1_real
+#           d_2_real         G_21_real, ... G_26_real, -G_21_imag, ... -G_26_imag            m_2_real
+#           ...              ...                                                             ...
+# d_obs.cv: d_N_real  G.bdm: G_N1_real, ... G_N6_real, -G_N1_imag, ... -G_N6_imag  m_est.cv: m_6_real
+#           d_1_imag         G_11_imag, ... G_16_imag,  G_11_real, ...  G_16_real            m_1_imag
+#           d_2_imag         G_21_imag, ... G_26_imag,  G_21_real, ...  G_26_real            m_2_imag
+#           ...              ...                                                             ...
+#           d_N_imag         G_N1_imag, ... G_N6_imag,  G_N1_real, ...  G_N6_real            m_6_imag
+#           [2N x 1]                              [2N x 12]                                  [12 x 1]
+# 
+# There will be 12 singular values in the SVD eigenvalue matrix, one for the real part  and one for the imag part
+# of all 6 independent values of m. All singular values are treated as essentially real by splitting x + jy into 
+# x and y seperately.
+# 
+# To convert from YMAEDA_TOOLS format to something more familiar in python, the following conversion equations are used:
+# d_py = d_obs[:len(d_obs)/2] + d_obs[len(d_obs)/2:] * 1j
+# G_py = G.bdm[:len(d_obs)/2, :len(m)/2] - G.bdm[:len(d_obs)/2, len(m)/2:] * 1j
+# m_py = m[:len(m)/2] + m[len(m)/2:] * 1j
 
 def read_Mseq1(main_dir):
     """
@@ -78,8 +116,8 @@ def read_dseq1(data_obs_dir, file_name):
     B = f.read().splitlines()
     f.close()
     Size = len(B) - 4
-    #t0 = float(B[1][3:]) #initial time
-    #dt = float(B[2][3:]) #time step
+    #t0 = float(B[1][3:]) # initial time
+    #dt = float(B[2][3:]) # time step
     synwave_buffer = np.array([])
     for i in range(Size):
         synwave_buffer = np.hstack([synwave_buffer, float(B[i + 4])])
@@ -114,6 +152,9 @@ def dcv_to_d(d_obs):
     """
     Converts the loaded dX.cv data files in frequency domain output by YMAEDA_TOOLS,
     to complex form a + jb.
+    
+    The conversion equation used is (see notes above):
+    d_py = d_obs[:len(d_obs)/2] + d_obs[len(d_obs)/2:] * 1j.
     """
     d_py = d_obs[:int(len(d_obs)/2)] + d_obs[int(len(d_obs)/2):] * 1j
     return d_py
@@ -133,19 +174,16 @@ def read_dobs(main_dir, i):
 def readall_dobs(main_dir, DATLEN = 2049, ROW = 0):
     """
     Reads the dX.cv data files in frequency domain, output by YMAEDA_TOOLS
-    for one particular station defined by ROW
+    for one particular station defined by ROW.
+    
+    The output is converted into a python complex array.
     
     D = readall_dobs(main_dir, ROW = 0)
     """
-    d_dir = main_dir + 'd_obs/d'
     DOBS = np.zeros(DATLEN, complex)
     for i in range(DATLEN):
-        d_file = d_dir + str(i) + '.cv'
-        ddata = np.loadtxt(d_file)
-        n_data_in_file = ddata[0]
-        d = ddata[1:]
-        assert len(d) == n_data_in_file
-        d = d[0:int(len(d) / 2)] + d[int(len(d) / 2):] * 1j
+        d = read_dobs(main_dir, i)
+        d = d[:int(len(d) / 2)] + d[int(len(d) / 2):] * 1j
         DOBS[i] = d[ROW]
     return DOBS
 
@@ -153,8 +191,12 @@ def mcv_to_m(m):
     """
     Converts the loaded mX.cv data files in frequency domain output by YMAEDA_TOOLS,
     to complex form a + jb.
+    
+    The conversion equation used is (see notes above):
+    m_py = m[:len(m)/2] + m[len(m)/2:] * 1j.
     """
-    m_py = m[0] + m[1] * 1j
+    #m_py = m[0] + m[1] * 1j
+    m_py = m[:int(len(m)/2)] + m[int(len(m)/2):] * 1j
     return m_py
 
 def read_mest(main_dir, i):
@@ -184,15 +226,17 @@ def Gdbm_to_G(G):
     """
     Converts the loaded G.dbm data files in frequency domain output by YMAEDA_TOOLS,
     to complex form a + jb.
+    
+    The conversion equation used is (see notes above):
+    G_py = G.bdm[:len(d_obs)/2, :len(m)/2] - G.bdm[:len(d_obs)/2, len(m)/2:] * 1j.
     """
     nrows, ncols = np.shape(G)
-    GG = G[0:int(nrows/2)]
-    GG = GG[:, 0:int(ncols/2)] - GG[:, int(ncols/2):] * 1j
+    GG = G[:int(nrows/2), :int(ncols/2)] - G[:int(nrows/2), int(ncols/2):] * 1j
     return GG
 
 def read_G(main_dir, i):
     """
-    Reads the GX.bdm binary data files output by YMAEDA_TOOLS.
+    Reads the G.bdm binary data files output by YMAEDA_TOOLS.
     """
     G_dir = main_dir + 'G/G'
     G_file = G_dir + str(i) + '.bdm'

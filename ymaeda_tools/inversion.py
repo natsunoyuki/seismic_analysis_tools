@@ -1,6 +1,6 @@
 import numpy as np
 
-from .read_dGM import read_dobs, read_G
+from .read_dGM import read_dobs, read_G, Gdbm_to_G, dcv_to_d
 
 # Linear inversion functions used by YMAEDA_TOOLS
 
@@ -38,11 +38,10 @@ def lstsqinv(G, d, w = 0):
     should be repeated for all frequency steps until the end.
     w = water level regularization parameter
     """
-    nrows, ncols = np.shape(G)
-    # as G is in the output format of YMAEDA_TOOLS, we need to first
-    # convert G to the standard complex number format a + ib:
-    GG = G[0:int(nrows/2)]
-    GG = GG[:,0:int(ncols/2)] - GG[:,int(ncols/2):]*1j
+    # as d and G is in the output format of YMAEDA_TOOLS, we need to first
+    # convert G to the standard complex number format a + jb:
+    GG = Gdbm_to_G(G)
+    dd = dcv_to_d(d)
     # since we are dealing with an overdetermined problem here, use least squares:
     GINV = np.dot(np.conj(GG.T), GG)
     # .T is faster than transpose()
@@ -54,7 +53,7 @@ def lstsqinv(G, d, w = 0):
         elif GINV == 0:
             GINV = w
     GINV = GINV**-1 * np.conj(GG.T)
-    mestlstsq = np.dot(GINV, d[0:int(len(d)/2)] + d[int(len(d)/2):]*1j)
+    mestlstsq = np.dot(GINV, dd)
     return np.real(mestlstsq)[0], np.imag(mestlstsq)[0]
 
 def gtg_magnitude(main_dir, w = 0, DATLEN = 2049):
