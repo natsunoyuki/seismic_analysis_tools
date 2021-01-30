@@ -1,19 +1,23 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import struct #for dealing with binary data
 
-# Functions for loading snapshot files output by YMAEDA_TOOLS
+# Functions for loading the snapshot files output by YMAEDA_TOOLS runwaterPML command.
+
+# The snapshot files are stored in the parent directory: PML/snapshot/, and the snapshots
+# themselves are stored in single file for each time step such as: source.Fx.t3.0000.3db
+# which stores the snapshots for the time step t = 3.0000. The Fx in the file name indicates
+# that the original impulse was applied in the x direction.
 
 # frequency step size used by YMAEDA_TOOLS
 df = 0.002441406 
 # frequency half space used by YMAEDA_TOOLS
-f = np.arange(0, df*2049, df) 
+f = np.arange(0, df * 2049, df) 
 # frequency full space used by YMAEDA_TOOLS
-F = np.arange(0, df*4096, df) 
+F = np.arange(0, df * 4096, df) 
 
-def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt = 0.1):
+def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt = 0.1, return_params = False):
     """
-    This is the most updated function to read snapshot data.
+    This is the most updated function to read snapshot data output by YMAEDA_TOOLS runwaterPML.
     
     This function should be a huge improvement over read_snapshot_loc3D_fast!!!
     
@@ -22,11 +26,11 @@ def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt 
     snapshot_dir: str
         directory where the snapshot .3db files are located
     X: float
-        x-location of the point to measure the Green's function
+        x-location of the point to measure the Green's function (in actual coordinates)
     Y: float
-        y-location of the point to measure the Green's function
+        y-location of the point to measure the Green's function (in actual coordinates)
     Z: float
-        z-location of the point to measure the Green's function
+        z-location of the point to measure the Green's function (in actual coordinates)
     t0: float
         starting time
     t1: float
@@ -46,6 +50,10 @@ def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt 
     t = np.arange(t0, t1 + dt, dt) # final output times 
     j = ['x', 'y', 'z'] # 3 axes to read
     
+    Ns = []
+    x0s = []
+    dxs = []
+    
     BYTELEN = 8 # .3db file byte length
     for i, k in enumerate(j): # loop over all 3 axes
         gt = np.zeros(n_steps)
@@ -55,10 +63,14 @@ def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt 
             #print("> > > Loading: {}".format("/source.F" + k + ".t" + TIME_ZEROS + ".3db"))
             with open(snapshot_file, mode = "rb") as File:
                 fileContent = File.read()
-                N = struct.unpack("iii", fileContent[0:12])
-                x0 = struct.unpack("ddd", fileContent[12:36])
-                dx = struct.unpack("ddd", fileContent[36:60])
+                N = struct.unpack("iii", fileContent[0:12]) # number of elements per axis
+                x0 = struct.unpack("ddd", fileContent[12:36]) # starting point of each axis
+                dx = struct.unpack("ddd", fileContent[36:60]) # distance step size per axis
                 data_length = int((len(fileContent) - 60) / BYTELEN)
+                if n == 0: # this information should be the same for all time steps!
+                    Ns.append(N)  
+                    x0s.append(x0)
+                    dxs.append(dx)
                 assert data_length == N[0] * N[1] * N[2]
                 
                 idx, idy, idz = snapshot_stnloc(N, x0, dx, X, Y, Z)
@@ -67,7 +79,10 @@ def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt 
                 R = L + BYTELEN
                 gt[n] = struct.unpack('d', fileContent[L:R])[0]
         g[:, i] = gt.copy()
-    return t, g
+    if return_params == True:
+        return t, g, Ns, x0s, dxs
+    else:
+        return t, g
 
 def read_snapshot_params(snapshot_file = 'source.Fx.t3.0000.3db'):
     """

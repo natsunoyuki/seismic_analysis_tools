@@ -1,13 +1,13 @@
 import numpy as np
 
-# Pole zero and seismometer response functions used by YMAEDA_TOOLS
+# Pole zero and seismometer response functions used by YMAEDA_TOOLS.
 
 # frequency step size used by YMAEDA_TOOLS
 df = 0.002441406 
 # frequency half space used by YMAEDA_TOOLS
-f = np.arange(0, df*2049, df) 
+f = np.arange(0, df * 2049, df) 
 # frequency full space used by YMAEDA_TOOLS
-F = np.arange(0, df*4096, df) 
+F = np.arange(0, df * 4096, df) 
 
 def read_pzfile(pzfilename = "/Volumes/MAC Backup/ymaeda_tools_mac/winv/share/polezero/tri120p"):
     f = open(pzfilename,'r')

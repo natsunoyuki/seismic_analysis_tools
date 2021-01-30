@@ -6,9 +6,9 @@ import struct #for dealing with binary data
 # frequency step size used by YMAEDA_TOOLS
 df = 0.002441406 
 # frequency half space used by YMAEDA_TOOLS
-f = np.arange(0, df*2049, df) 
+f = np.arange(0, df * 2049, df) 
 # frequency full space used by YMAEDA_TOOLS
-F = np.arange(0, df*4096, df) 
+F = np.arange(0, df * 4096, df) 
 
 # Output files from YMAEDA_TOOLS winv linear inversion algorithm
 # --------------------------------------------------------------
