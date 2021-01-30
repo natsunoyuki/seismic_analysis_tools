@@ -67,10 +67,12 @@ def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt 
                 x0 = struct.unpack("ddd", fileContent[12:36]) # starting point of each axis
                 dx = struct.unpack("ddd", fileContent[36:60]) # distance step size per axis
                 data_length = int((len(fileContent) - 60) / BYTELEN)
-                if n == 0: # this information should be the same for all time steps!
+                if n == 0: # record the params only for the first time step. They should remain the same for the rest!
                     Ns.append(N)  
                     x0s.append(x0)
                     dxs.append(dx)
+                # At the end of the data extraction process, Ns, x0s and dxs should have the form:
+                # np.array([[Fx params], [Fy params], [Fz params]])
                 assert data_length == N[0] * N[1] * N[2]
                 
                 idx, idy, idz = snapshot_stnloc(N, x0, dx, X, Y, Z)
