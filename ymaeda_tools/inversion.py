@@ -1,5 +1,4 @@
 import numpy as np
-
 from .read_dGM import read_dobs, read_G, Gdbm_to_G, dcv_to_d
 
 # Linear inversion functions used by YMAEDA_TOOLS
@@ -7,9 +6,9 @@ from .read_dGM import read_dobs, read_G, Gdbm_to_G, dcv_to_d
 # frequency step size used by YMAEDA_TOOLS
 df = 0.002441406 
 # frequency half space used by YMAEDA_TOOLS
-f = np.arange(0, df*2049, df) 
+f = np.arange(0, df * 2049, df) 
 # frequency full space used by YMAEDA_TOOLS
-F = np.arange(0, df*4096, df) 
+F = np.arange(0, df * 4096, df) 
 
 def svdinv(G, d, l = 0.01):
     """
@@ -79,7 +78,7 @@ def gtg_magnitude(main_dir, w = 0, DATLEN = 2049):
 
 def winv_lstsq(main_dir, w = 0, DATLEN = 2049, dt = 0.1, N_DATA = 6, N_MODEL = 2):
     """
-    Read and load data, conduct inversion using least squares
+    Read and load data, conduct inversion using least squares for the outputs by YMAEDA_TOOLS.
     w = water level regularization parameter
     """
     M = np.zeros([DATLEN, N_MODEL]) # YMAEDA_TOOLS calculated m
@@ -95,7 +94,7 @@ def winv_lstsq(main_dir, w = 0, DATLEN = 2049, dt = 0.1, N_DATA = 6, N_MODEL = 2
     
 def winv_svd(main_dir, DATLEN = 2049, dt = 0.1, N_DATA = 6, N_MODEL = 2):
     """
-    Read and load data, conduct inversion using SVD.
+    Read and load data, conduct inversion using SVD for the outputs by YMAEDA_TOOLS.
     """
     M = np.zeros([DATLEN, N_MODEL]) # YMAEDA_TOOLS calculated m
     for i in range(DATLEN):

@@ -1,5 +1,5 @@
 import numpy as np
-import struct #for dealing with binary data
+import struct # for dealing with binary data
 
 # Functions for loading d_obs.cv, G.dbm and m_est.cv files output by YMAEDA_TOOLS.
 

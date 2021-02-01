@@ -1,5 +1,5 @@
 import numpy as np
-import struct #for dealing with binary data
+import struct # for dealing with binary data
 
 # Functions for loading the snapshot files output by YMAEDA_TOOLS runwaterPML command.
 

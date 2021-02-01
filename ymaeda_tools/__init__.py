@@ -7,13 +7,15 @@
 # ------------
 # 1. dft.py
 #    Functions associated with the discrete Fourier transform functions used in the original C code.
-# 2. inversion.py
+# 2. inversion_data.py
+#    Functions associated with creation of the frequency space data used in the seismic linear inversion algorithm in YMAEDA_TOOLS.
+# 3. inversion.py
 #    Functions associated with the linear inversion algorithm used in the original C code.
-# 3. polezero.py
+# 4. polezero.py
 #    Functions associated with poles and zeros (seismometer response) used in the original C code.
-# 4. read_dGM.py
+# 5. read_dGM.py
 #    Functions associated with reading the d, G and M .seq files created by the original C code.
-# 5. read_snapshot.py
+# 6. read_snapshot.py
 #    Functions associated with reading the "effective Green's functions" snapshot .3db files created by the original C code.
-# 6. read_stfun.py
+# 7. read_stfun.py
 #    Functions associated with the source time functions used in the original C code.
