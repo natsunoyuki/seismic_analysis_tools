@@ -14,9 +14,11 @@
 #    Jupyter notebook containing tests of the Sac.py codes in sac_tools.
 # 2. Shinmoedake.ipynb
 #    Jupyter notebook containing tests of the Shinmoedake.py codes in sac_tools.
-# 3. ymaeda_tools_gf_checks.ipynb
+# 3. ymaeda_tools_dft_checks.ipynb
+#    Jupyter notebook containing tests of the discrete Fourier transform functions in YMAEDA_TOOLS.
+# 4. ymaeda_tools_gf_checks.ipynb
 #    Jupyter notebook containing checks of the Green's functions calculated by runwaterPML.
-# 4. ymaeda_tools_inv_checks.ipynb
+# 5. ymaeda_tools_inv_checks.ipynb
 #    Jupyter notebook containing checks of the linear inversion results calculated by winv.
-# 5. ymaeda_tools_dGM_check.ipynb
+# 6. ymaeda_tools_dGM_check.ipynb
 #    Jupyter notebook containing checks of the d_obs.cv, m_est.cv and G.dbm files created by winv.
