@@ -90,17 +90,18 @@ def timeshift(mest, D = 1000):
     
     Returns
     -------
-    mest: np.array
+    mest_shifted: np.array
         Time shifted Fourier transformed signal.
     """
     N = len(mest)
+    mest_shifted = mest.copy()
     for k in range(N):
         W = -2 * np.pi * k * (-D) / N
         a = mest[k, 0]
         b = mest[k, 1]
-        mest[k, 0] = a * np.cos(W) - b * np.sin(W) # time shift the real part
-        mest[k, 1] = a * np.sin(W) + b * np.cos(W) # time shift the imag part
-    return mest
+        mest_shifted[k, 0] = a * np.cos(W) - b * np.sin(W) # time shift the real part
+        mest_shifted[k, 1] = a * np.sin(W) + b * np.cos(W) # time shift the imag part
+    return mest_shifted
     
 def timeshift_cplx(mest, D = 1000):
     """
@@ -118,14 +119,15 @@ def timeshift_cplx(mest, D = 1000):
     
     Returns
     -------
-    mest: np.array
+    mest_shited: np.array
         Time shifted Fourier transformed signal.
     """
     N = len(mest)
+    mest_shifted = mest.copy()
     for k in range(N):
         W = -1j * 2 * np.pi * k * (-D) / N
-        mest[k] = mest[k] * np.exp(W)
-    return mest  
+        mest_shifted[k] = mest[k] * np.exp(W)
+    return mest_shifted
 
 def exidft(M, DATLEN = 2049):
     """
