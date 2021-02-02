@@ -11,10 +11,24 @@ F = np.arange(0, df * 4096, df)
 
 def read_stfunseq2(stfun_dir):
     """
-    reads the zero padded source time function output by YMAEDA_TOOLS. 
-    some how, making fourier transform of this time series does not result
+    Reads the zero padded source time function output by YMAEDA_TOOLS. 
+    Some how, making fourier transform of this time series does not result
     in the fourier transform obtained through read_stfunimseq2(stfun_dir)...
-    a,b=read_stfunseq2(stfun_dir)
+    
+    Usage example:
+    t, x = read_stfunseq2(stfun_dir)
+    
+    Inputs
+    ------
+    stfun_dir: str
+        Directory containing the stfun.seq2 file to be loaded.
+        
+    Returns
+    -------
+    t: np.array
+        Time values of the loaded stfun.seq2 file.
+    x: np.array
+        Loaded time domain values of the stfun.seq2 file.
     """
     filename = stfun_dir + "stfun.seq2"
     f = open(filename, 'r')
@@ -34,9 +48,22 @@ def read_stfunseq2(stfun_dir):
 
 def read_stfunimseq2(stfun_dir):
     """
-    reads the fourier spectrum of the source time function output by
-    YMAEDA_TOOLS.
-    a,b=read_stfunimseq2(stfun_dir)
+    Reads the fourier spectrum of the source time function output by YMAEDA_TOOLS.
+    
+    Usage example:
+    f, S = read_stfunimseq2(stfun_dir)
+    
+    Inputs
+    ------
+    stfun_dir: str
+        Directory containing the stfun_spectrum.imseq2 file to be loaded.
+        
+    Returns
+    -------
+    f: np.array
+        Frequency values of the loaded stfun_spectrum.imseq2 file.
+    S: np.array
+        Loaded Fourier spectrum values of the stfun_spectrum.imseq2 file.
     """
     filename = stfun_dir + "stfun_spectrum.imseq2"
     f = open(filename, 'r')

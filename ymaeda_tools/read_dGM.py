@@ -100,6 +100,16 @@ def read_Mseq1(main_dir):
     Reads the output M.seq1 results from YMAEDA_TOOLS in time domain.
     This file is tailored specifically to read from the model/ directory
     for convenience's sake, and cannot be used for other data!
+    
+    Inputs
+    ------
+    main_dir: str
+        Directory path to the parent folder where model/ containing M.seq1 is located.
+    
+    Returns
+    -------
+    synm: np.array
+        Loaded moment tensor from M.seq1.
     """
     synm = read_dseq1(main_dir, 'model/M.seq1')
     return synm
@@ -110,7 +120,20 @@ def read_dseq1(data_obs_dir, file_name):
     Although originally created to read d.seq1 files, this function
     should be able to read all .seq1 time series files created by YMAEDA_TOOLs.
     
+    Usage example:
     d = read_dseq1(data_obs_dir, 'EV.SMN.E.sac.seq1')
+    
+    Inputs
+    ------
+    data_obs_dir: str
+        Directory path containing the .seq1 file to be loaded.
+    file_name:str
+        File name of the .seq1 file to be loaded.
+    
+    Returns
+    -------
+    synm: np.array
+        Contents of the loaded .seq1 file.
     """
     f = open(data_obs_dir + file_name, 'r')
     B = f.read().splitlines()
@@ -131,7 +154,22 @@ def read_dimseq2(tf_dir, file_name):
     Although originally created to read d.imseq2 files, this function
     should be able to read all .imseq2 fourier spectra files created by YMAEDA_TOOLs.    
 
+    Usage example:
     a, b = read_dimseq2(data_obs_spectrum_dir, 'EV.SMN.E.sac.imseq2')
+    
+    Inputs
+    ------
+    tf_dir: str
+        Directory path containing the .imseq2 file to be loaded.
+    file_name: str
+        File name of the .imseq2 file to be loaded.
+        
+    Returns
+    -------
+    f: np.array 
+        Frequency steps of the loaded .imseq2 file.
+    C: np.array
+        Contents of the loaded .imseq2 file.
     """
     f = open(tf_dir + file_name, 'r')
     B = f.read().splitlines()
@@ -155,6 +193,16 @@ def dcv_to_d(d_obs):
     
     The conversion equation used is (see notes above):
     d_py = d_obs[:len(d_obs)/2] + d_obs[len(d_obs)/2:] * 1j.
+    
+    Inputs
+    ------
+    d_obs: np.array
+        Contents of the loaded dX.cv data.
+    
+    Returns
+    -------
+    d_py: np.array
+        Contents of the loaded dX.cv data converted to complex form for use in Python.
     """
     d_py = d_obs[:int(len(d_obs)/2)] + d_obs[int(len(d_obs)/2):] * 1j
     return d_py
@@ -162,6 +210,18 @@ def dcv_to_d(d_obs):
 def read_dobs(main_dir, i):
     """
     Reads the dX.cv data files in frequency domain, output by YMAEDA_TOOLS.
+    
+    Inputs
+    ------
+    main_dir: str
+        Parent directory containing the d_obs/ folder which contains the dX.cv files.
+    i: int
+        Index of the dX.cv file to load.
+        
+    Returns
+    -------
+    d: np.array
+        Contents of the loaded dX.cv file.
     """
     d_dir = main_dir + 'd_obs/d'
     d_file = d_dir + str(i) + '.cv'
@@ -178,7 +238,22 @@ def readall_dobs(main_dir, DATLEN = 2049, ROW = 0):
     
     The output is converted into a python complex array.
     
+    Usage example:
     D = readall_dobs(main_dir, ROW = 0)
+    
+    Inputs
+    ------
+    main_dir: str
+        Parent directory containing the d_obs/ folder which contains the dX.cv files.
+    DATLEN: int
+        Data length (number of dX.cv files to load). Set to 2049 for compatibility with YMAEDA_TOOLS.
+    ROW: int
+        Which row of data within dX.cv to load.
+        
+    Returns
+    -------
+    DOBS: np.array
+        Loaded dX.cv data from all 2049 files in d_obs/.
     """
     DOBS = np.zeros(DATLEN, complex)
     for i in range(DATLEN):
@@ -194,6 +269,16 @@ def mcv_to_m(m):
     
     The conversion equation used is (see notes above):
     m_py = m[:len(m)/2] + m[len(m)/2:] * 1j.
+    
+    Inputs
+    ------
+    m: np.array
+        Loaded mX.cv data.
+    
+    Returns
+    -------
+    m_py: np.array
+        Loaded mX.cv data converted to complex form for use in Python.
     """
     #m_py = m[0] + m[1] * 1j
     m_py = m[:int(len(m)/2)] + m[int(len(m)/2):] * 1j
@@ -202,6 +287,18 @@ def mcv_to_m(m):
 def read_mest(main_dir, i):
     """
     Reads the mX.cv data files in frequency domain output by YMAEDA_TOOLS.
+    
+    Inputs
+    ------
+    main_dir: str
+        Parent directory containing the m_est/ folder which contains the mX.cv files.
+    i: int
+        Index of the mX.cv file to load.
+        
+    Returns
+    -------
+    m: np.array
+        Loaded mX.cv file data.
     """
     m_dir = main_dir + 'm_est/m'
     m_file = m_dir + str(i) + '.cv'
@@ -215,6 +312,20 @@ def readall_mest(main_dir, DATLEN = 2049, NM = 2):
     
     NM: number of M components to read. Note that real and imag portions form 2 components.
         [:, 0] is the real component, [:, 1] is the imaginary part.
+        
+    Inputs
+    ------
+    main_dir: str
+        Parent directory containing the m_est/ folder which contains the mX.cv files.
+    DATLEN: int
+        Data length (number of mX.cv files to load). Set to 2049 for compatibility with YMAEDA_TOOLS.
+    NM: int
+        Number of columns in YMAEDA_TOOLS output for the estimated moment tensor. Minimum is 2 for one real and one imag part.
+        
+    Returns
+    -------
+    M: np.array
+        Loaded data from all 2049 mX.cv files located 
     """
     M = np.zeros([DATLEN, NM])
     for i in range(DATLEN):
@@ -229,6 +340,16 @@ def Gdbm_to_G(G):
     
     The conversion equation used is (see notes above):
     G_py = G.bdm[:len(d_obs)/2, :len(m)/2] - G.bdm[:len(d_obs)/2, len(m)/2:] * 1j.
+    
+    Inputs
+    ------
+    G: np.array
+        Loaded G.dbm data from YMAEDA_TOOLS.
+    
+    Returns
+    -------
+    GG: np.array
+        Loaded G.dbm data converted to complex form for use in Python.
     """
     nrows, ncols = np.shape(G)
     GG = G[:int(nrows/2), :int(ncols/2)] - G[:int(nrows/2), int(ncols/2):] * 1j
@@ -237,6 +358,18 @@ def Gdbm_to_G(G):
 def read_G(main_dir, i):
     """
     Reads the G.bdm binary data files output by YMAEDA_TOOLS.
+    
+    Inputs
+    ------
+    main_dir: str
+        Parent directory containing the G/ folder which contains the G.dbm files.
+    i: int
+        Index of the G.dbm file to be loaded.
+        
+    Returns
+    -------
+    G: np.array
+        Loaded G.dbm data.
     """
     G_dir = main_dir + 'G/G'
     G_file = G_dir + str(i) + '.bdm'
@@ -268,6 +401,18 @@ def read_G(main_dir, i):
 def readall_G(main_dir, DATLEN = 2049):
     """
     Returns a list of arrays which needs to be unfolded.
+    
+    Inputs
+    ------
+    main_dir: str
+        Parent directory containing the G/ folder which contains the G.dbm files.
+    DATLEN: int
+        Number of G.dbm files in G/. Set to 2049 for compatibility with YMAEDA_TOOLS.
+        
+    Returns
+    -------
+    Gstack: np.array
+        List of arrays which needs to be unfolded.
     """
     Gstack = []
     for i in range(DATLEN):
@@ -278,6 +423,20 @@ def readall_G(main_dir, DATLEN = 2049):
 def unfold_G(Gstack, INDEX = 0, DATLEN = 2049):
     """
     This function is to be used with readall_G to unfold the individual green functions.
+    
+    Inputs
+    ------
+    Gstack: list
+        List of arrays to be unfolded.
+    INDEX: int
+        Index of the array to be unfolded.
+    DATLEN: int
+        Number of G.dbm files in G/. Set to 2049 for compatibility with YMAEDA_TOOLS.
+    
+    Returns
+    -------
+    g: np.array
+        Unfolded arrays of G.
     """
     g = np.zeros(DATLEN, complex)
     for i in range(DATLEN):

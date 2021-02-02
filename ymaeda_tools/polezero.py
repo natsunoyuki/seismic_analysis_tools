@@ -10,6 +10,21 @@ f = np.arange(0, df * 2049, df)
 F = np.arange(0, df * 4096, df) 
 
 def read_pzfile(pzfilename = "/Volumes/MAC Backup/ymaeda_tools_mac/winv/share/polezero/tri120p"):
+    """
+    Inputs
+    ------
+    pzfilename: str
+        pole-zero file name
+    
+    Returns
+    -------
+    POLES: np.array
+        Poles of the seismometer.
+    ZEROS: np.array
+        Zeros of the seismometer.
+    CONSTANT: float
+        Constant gain value of the seismometer.
+    """
     f = open(pzfilename,'r')
     X = f.readlines()
     f.close()

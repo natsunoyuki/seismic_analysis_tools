@@ -91,6 +91,20 @@ def read_snapshot_params(snapshot_file = 'source.Fx.t3.0000.3db'):
     Returns only the various parameters of a snapshot.3db file without outputting any data.
     
     N, x0, dx = read_snapshot_params(snapshot_dir = '/media/yumi/INVERSION/SMN_EW_SMALL/PML/snapshot/source.Fx.t3.0000.3db')
+    
+    Inputs
+    ------
+    snapshot_file: str
+        Path to the .3db snapshot file.
+    
+    Returns
+    -------
+    N: tuple
+        (Nx, Ny, Nz) number of elements along each axis.
+    x0: tuple
+        (x0, y0, z0) starting point of each axis.
+    dx: tuple
+        (dx, dy, dz) step size for each axis.
     """
     with open(snapshot_file, mode = 'rb') as File:
         fileContent = File.read()
@@ -110,6 +124,24 @@ def snapshot_XYZ(N, x0, dx):
     X = arange(x0[0], x0[0]+dx[0]*N[0], dx[0])
     Y = arange(x0[1], x0[1]+dx[1]*N[1], dx[1])
     Z = arange(x0[2], x0[2]+dx[2]*N[2], dx[2])
+    
+    Inputs
+    ------
+    N: tuple, np.array
+        (Nx, Ny, Nz) number of elements along each axis.
+    x0: tuple, np.array
+        (x0, y0, z0) starting point of each axis.
+    dx: tuple, np.array
+        (dx, dy, dz) step size for each axis.
+        
+    Returns
+    -------
+    X: np.array
+        X axis array.
+    Y: np.array
+        Y axis array.
+    Z: np.array
+        Z axis array.
     """
     X = np.array([x0[0] + dx[0] * i for i in range(N[0])])
     Y = np.array([x0[1] + dx[1] * i for i in range(N[1])])
@@ -124,6 +156,30 @@ def snapshot_stnloc(N, x0, dx, X_STN, Y_STN, Z_STN):
     SMN: -11175, -119878, 1317
     SMW: -12295, -120893, 1110
     LP:  -10900, -121100, 1000
+    
+    Inputs
+    ------
+    N: tuple, np.array
+        (Nx, Ny, Nz) number of elements along each axis.
+    x0: tuple, np.array
+        (x0, y0, z0) starting point of each axis.
+    dx: tuple, np.array
+        (dx, dy, dz) step size for each axis.
+    X_STN: float
+        Station geographical location (X-coordinate).
+    Y_STN: float
+        Station geographical location (Y-coordinate).
+    Z_STN: float
+        Station geographical location (Z-coordinate).
+        
+    Returns
+    -------
+    idx: int
+        Index along the X axis corresponding to X_STN.
+    idy: int
+        Index along the Y axis corresponding to Y_STN.
+    idz: int
+        Index along the Z axis corresponding to Z_STN.
     """
     X, Y, Z = snapshot_XYZ(N, x0, dx)
     idx = (abs(X - X_STN)).argmin()
