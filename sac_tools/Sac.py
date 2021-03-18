@@ -10,6 +10,13 @@ class Sac:
     """
     #====================constructor====================
     def __init__(self, file_name = None):
+        """
+        self.data: np.array of data loaded from .sac file
+        self.df: pd.DataFrame of data loaded from .sac file
+        self.paz: dict containing seismometer poles and zeros
+        self.st: obspy.core.stream.Stream of data loaded from .sac file
+        self.stats: data obspy.core.trace.Stats loaded from .sac file
+        """
         self.data = None
         self.df = None
         self.paz = None
@@ -155,7 +162,7 @@ class Sac:
     
     def get_st(self):
         """
-        Returns loaded data stream as obspy.core.stream.Stream
+        Returns loaded data stream as obspy.core.stream.Stream.
         """
         return self.st
     
