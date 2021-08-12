@@ -1,7 +1,10 @@
 import numpy as np
 from .read_dGM import read_dobs, read_G, Gdbm_to_G, dcv_to_d
 
-# Linear inversion functions used by YMAEDA_TOOLS
+# Linear inversion functions used by YMAEDA_TOOLS.
+
+# The inputs are d_obs/dX.cv and G/G.dbm observations and Green function files.
+# The outputs are m_est/mX.cv moment tensor files.
 
 # frequency step size used by YMAEDA_TOOLS
 df = 0.002441406 

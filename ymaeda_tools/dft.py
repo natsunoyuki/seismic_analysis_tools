@@ -10,6 +10,14 @@ f = np.arange(0, df * 2049, df)
 # frequency full space used by YMAEDA_TOOLS
 F = np.arange(0, df * 4096, df) 
 
+# Some comments on the DFT algorithms used by YMAEDA_TOOLS:
+# 1. To convert m_t.seq1 to m_w.imseq2 data: m_w = halfdft_timeshift(m_t, D) * dt
+# 2. To convert m_w.imseq2 to m_t.seq1 data: m_t = np.real(idft(timeshift_cplx(m_w, D)) / dt)
+# 3. To convert mX.cv half frequency domain to time domain: m_t = np.real(exidft_timeshift(m_w, D = 1000) / dt)
+
+# dX.cv, mX.cv and G.dbm files are stored in frequency half space, up to Nyquist frequency.
+# .imseq2 are full space frequency data files.
+
 def dft(X, fast = True):
     """
     This Discrete Fourier Transform was constructed to match that used in YMAEDA_TOOLS.

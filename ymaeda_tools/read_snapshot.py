@@ -1,10 +1,11 @@
 import numpy as np
 import struct # for dealing with binary data
+import os
 
-# Functions for loading the snapshot files output by YMAEDA_TOOLS runwaterPML command.
+# Functions for loading the snapshot .3db files output by YMAEDA_TOOLS runwaterPML command.
 
-# The snapshot files are stored in the parent directory: PML/snapshot/, and the snapshots
-# themselves are stored in single file for each time step such as: source.Fx.t3.0000.3db
+# The snapshot files are stored in the parent directory: PML/snapshot/<station>, and the snapshots
+# themselves are stored in a single file for each time step such as: source.Fx.t3.0000.3db
 # which stores the snapshots for the time step t = 3.0000. The Fx in the file name indicates
 # that the original impulse was applied in the x direction.
 
@@ -14,6 +15,55 @@ df = 0.002441406
 f = np.arange(0, df * 2049, df) 
 # frequency full space used by YMAEDA_TOOLS
 F = np.arange(0, df * 4096, df) 
+
+def extract_greens_functions():
+    """
+    This function is used to extract the snapshots for processing into Green's functions.
+    
+    Inputs
+    ------
+    
+    Outputs
+    -------
+    
+    
+    """
+    pass
+
+def extract_snapshot_1d(snapshot_dir, k = "x", X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt = 0.1, return_params = False):
+    n_steps = int((t1 - t0) / dt) + 1 # number of time steps
+    g = np.zeros(n_steps) # final output green functions in t; x, y, z
+    t = np.arange(t0, t1 + dt, dt) # final output times 
+    
+    BYTELEN = 8 # snapshot .3db file byte length
+    
+    for n in range(n_steps): # loop over all time steps. One file for one time step...
+        TIME_ZEROS = format(t0 + dt * n, "0.4f")
+        snapshot_file = os.path.join(snapshot_dir, "source.F" + k + ".t" + TIME_ZEROS + ".3db")
+            
+        with open(snapshot_file, mode = "rb") as File:
+            fileContent = File.read()
+            if n == 0:
+                N = struct.unpack("iii", fileContent[0:12]) # number of elements per axis
+                x0 = struct.unpack("ddd", fileContent[12:36]) # starting point of each axis
+                dx = struct.unpack("ddd", fileContent[36:60]) # distance step size per axis
+                data_length = int((len(fileContent) - 60) / BYTELEN)
+                    
+            # At the end of the data extraction process, Ns, x0s and dxs should have the form:
+            # np.array([[Fx params], [Fy params], [Fz params]])
+            #assert data_length == N[0] * N[1] * N[2]
+                
+            # From the 3D snapshot data, extract only the data for the wanted point [X, Y Z].
+            # Convert the geographical coordinates to indices of the binary data:
+            idx, idy, idz = snapshot_stnloc(N, x0, dx, X, Y, Z)
+            counter = index_convert31(idx, idy, idz, N[0], N[1], N[2])
+            L = 60 + BYTELEN * counter # Left most index of the wanted data.
+            R = L + BYTELEN            # Right most index of the wanted data.
+            g[n] = struct.unpack("d", fileContent[L:R])[0]
+    if return_params == True:
+        return t, g, N, x0, dx
+    else:
+        return t, g
 
 def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt = 0.1, return_params = False):
     """
@@ -46,23 +96,26 @@ def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt 
         array of 3D Green's functions
     """
     n_steps = int((t1 - t0) / dt) + 1 # number of time steps
-    g = np.zeros((n_steps, 3)) # final output green functions
+    g = np.zeros([n_steps, 3]) # final output green functions in t; x, y, z
     t = np.arange(t0, t1 + dt, dt) # final output times 
     j = ['x', 'y', 'z'] # 3 axes to read
     
-    Ns = []
-    x0s = []
-    dxs = []
+    Ns = [] # number of grid cells for each axis
+    x0s = [] # grid cell initial point for each axis.
+    dxs = [] # grid step size for each axis.
     
-    BYTELEN = 8 # .3db file byte length
-    for i, k in enumerate(j): # loop over all 3 axes
+    BYTELEN = 8 # snapshot .3db file byte length
+    
+    for i, k in enumerate(j): # loop over [x, y, z]
         gt = np.zeros(n_steps)
         for n in range(n_steps): # loop over all time steps. One file for one time step...
             TIME_ZEROS = format(t0 + dt * n, "0.4f")
-            snapshot_file = snapshot_dir + "/source.F" + k + ".t" + TIME_ZEROS + ".3db"
+            snapshot_file = os.path.join(snapshot_dir, "source.F" + k + ".t" + TIME_ZEROS + ".3db")
             #print("> > > Loading: {}".format("/source.F" + k + ".t" + TIME_ZEROS + ".3db"))
+            
             with open(snapshot_file, mode = "rb") as File:
                 fileContent = File.read()
+                
                 N = struct.unpack("iii", fileContent[0:12]) # number of elements per axis
                 x0 = struct.unpack("ddd", fileContent[12:36]) # starting point of each axis
                 dx = struct.unpack("ddd", fileContent[36:60]) # distance step size per axis
@@ -71,15 +124,18 @@ def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt 
                     Ns.append(N)  
                     x0s.append(x0)
                     dxs.append(dx)
+                    
                 # At the end of the data extraction process, Ns, x0s and dxs should have the form:
                 # np.array([[Fx params], [Fy params], [Fz params]])
                 assert data_length == N[0] * N[1] * N[2]
                 
+                # From the 3D snapshot data, extract only the data for the wanted point [X, Y Z].
+                # Convert the geographical coordinates to indices of the binary data:
                 idx, idy, idz = snapshot_stnloc(N, x0, dx, X, Y, Z)
                 counter = index_convert31(idx, idy, idz, N[0], N[1], N[2])
-                L = 60 + BYTELEN * counter
-                R = L + BYTELEN
-                gt[n] = struct.unpack('d', fileContent[L:R])[0]
+                L = 60 + BYTELEN * counter # Left most index of the wanted data.
+                R = L + BYTELEN            # Right most index of the wanted data.
+                gt[n] = struct.unpack("d", fileContent[L:R])[0]
         g[:, i] = gt.copy()
     if return_params == True:
         return t, g, Ns, x0s, dxs
@@ -88,9 +144,7 @@ def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt 
 
 def read_snapshot_params(snapshot_file = 'source.Fx.t3.0000.3db'):
     """
-    Returns only the various parameters of a snapshot.3db file without outputting any data.
-    
-    N, x0, dx = read_snapshot_params(snapshot_dir = '/media/yumi/INVERSION/SMN_EW_SMALL/PML/snapshot/source.Fx.t3.0000.3db')
+    Returns only the parameters of a snapshot .3db file without outputting any data.
     
     Inputs
     ------
@@ -150,7 +204,7 @@ def snapshot_XYZ(N, x0, dx):
 
 def snapshot_stnloc(N, x0, dx, X_STN, Y_STN, Z_STN):
     """
-    From the parameters of the snapshot.3db file calculate the nearest grid location for a specified station.
+    From the parameters of the snapshot .3db file calculate the nearest grid location for a specified station.
     If the specified location is outside the grid, the grid point nearest 
     to the specified location is returned and a warning is given.
     SMN: -11175, -119878, 1317
@@ -182,6 +236,8 @@ def snapshot_stnloc(N, x0, dx, X_STN, Y_STN, Z_STN):
         Index along the Z axis corresponding to Z_STN.
     """
     X, Y, Z = snapshot_XYZ(N, x0, dx)
+    # Use .argmin() to find the closest index to the wanted point!
+    # The operator == is not guaranteed to work due to discretization!
     idx = (abs(X - X_STN)).argmin()
     idy = (abs(Y - Y_STN)).argmin()
     idz = (abs(Z - Z_STN)).argmin()
@@ -195,10 +251,10 @@ def snapshot_stnloc(N, x0, dx, X_STN, Y_STN, Z_STN):
 
 def index_convert13(r, Nx, Ny, Nz):
     """
-    Converts the 1D index of GT to the 3D index of GT3D
-    1. the outer most loop: x
-    2. next inner loop: y
-    3. inner most loop: z
+    Converts the 1D index of GT to the 3D index of GT3D.
+    1. the outer most loop: x,
+    2. next inner loop: y,
+    3. inner most loop: z,
     4. therefore z is the most folded coordinate followed by y, x!
     """
     idz = np.mod(r, Nz) # most folded coordinate
@@ -213,6 +269,9 @@ def index_convert31(idx, idy, idz, Nx, Ny, Nz):
     """
     r = idx * Ny * Nz + idy * Nz + idz
     return r
+
+################################################################################
+# Obsolete functions
 
 def read_snapshot_fast(snapshot_dir = 'source.Fx.t3.0000.3db'):
     """
@@ -252,10 +311,6 @@ def read_snapshot_loc_fast(snapshot_dir, direction = 'z', X = 0, Y = 0, Z = 0, t
     X, Y, Z over a time range of t0:t1 with dt.
     Faster code that deals with only 1D array structures.
     This code should be used instead of read_snapshot_loc.
-    
-    t,gx=read_snapshot_loc_fast(snapshot_dir="/media/yumi/INVERSION/SMN_EW_SMALL/PML/snapshot",direction='x',X=idx,Y=idy,Z=idz)
-    t,gy=read_snapshot_loc_fast(snapshot_dir="/media/yumi/INVERSION/SMN_EW_SMALL/PML/snapshot",direction='y',X=idx,Y=idy,Z=idz)
-    t,gz=read_snapshot_loc_fast(snapshot_dir="/media/yumi/INVERSION/SMN_EW_SMALL/PML/snapshot",direction='z',X=idx,Y=idy,Z=idz)
     """
     t = np.arange(t0, t1 + dt, dt)
     N = int((t1 - t0) / dt) + 1
@@ -272,6 +327,8 @@ def read_snapshot_all_fast(snapshot_dir, direction = 'z', t0 = 0.0, t1 = 12.0, d
     """
     This function reads and loads the entire snapshot over the specified time range for a particular direction. 
     THIS WILL CONSUME PLENTY OF MEMORY and should not be used on slower computers!!!
+    
+    This function has been superseded by read_snapshot_loc3D_fast.
     """
     #t = np.arange(t0, t1 + dt, dt)
     N = int((t1 - t0) / dt) + 1
@@ -287,7 +344,9 @@ def read_snapshot_all_fast(snapshot_dir, direction = 'z', t0 = 0.0, t1 = 12.0, d
 
 def read_snapshot_loc3D_fast(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt = 0.1): 
     """
-    This faster function should be used instead of read_snapshot_loc3D.
+    This faster function should be used instead of read_snapshot_fast.
+    
+    This function has been superseded by extract_snapshot.
     """
     N = int((t1 - t0) / dt) + 1
     g = np.zeros((N, 3))

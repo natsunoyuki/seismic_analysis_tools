@@ -2,6 +2,9 @@ import numpy as np
 import struct # for dealing with binary data
 
 # Functions for loading d_obs.cv, G.dbm and m_est.cv files output by YMAEDA_TOOLS.
+#
+# The functions for converting snapshot .3db timeseries into Green's functions for
+# linear seismic moment inversion are found in inversion_data.py.
 
 # frequency step size used by YMAEDA_TOOLS
 df = 0.002441406 

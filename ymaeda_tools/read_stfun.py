@@ -1,6 +1,6 @@
 import numpy as np
 
-# Functions for loading and creating source time functions output by YMAEDA_TOOLS
+# Functions for loading and creating source time functions output by YMAEDA_TOOLS.
 
 # frequency step size used by YMAEDA_TOOLS
 df = 0.002441406 
