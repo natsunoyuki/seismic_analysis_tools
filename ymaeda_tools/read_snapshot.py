@@ -19,57 +19,16 @@ F = np.arange(0, df * 4096, df)
 def extract_greens_functions():
     """
     This function is used to extract the snapshots for processing into Green's functions.
-    
-    Inputs
-    ------
-    
-    Outputs
-    -------
-    
-    
+
     """
-    pass
+    return
 
-def extract_snapshot_1d(snapshot_dir, k = "x", X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt = 0.1, return_params = False):
-    n_steps = int((t1 - t0) / dt) + 1 # number of time steps
-    g = np.zeros(n_steps) # final output green functions in t; x, y, z
-    t = np.arange(t0, t1 + dt, dt) # final output times 
-    
-    BYTELEN = 8 # snapshot .3db file byte length
-    
-    for n in range(n_steps): # loop over all time steps. One file for one time step...
-        TIME_ZEROS = format(t0 + dt * n, "0.4f")
-        snapshot_file = os.path.join(snapshot_dir, "source.F" + k + ".t" + TIME_ZEROS + ".3db")
-            
-        with open(snapshot_file, mode = "rb") as File:
-            fileContent = File.read()
-            if n == 0:
-                N = struct.unpack("iii", fileContent[0:12]) # number of elements per axis
-                x0 = struct.unpack("ddd", fileContent[12:36]) # starting point of each axis
-                dx = struct.unpack("ddd", fileContent[36:60]) # distance step size per axis
-                data_length = int((len(fileContent) - 60) / BYTELEN)
-                    
-            # At the end of the data extraction process, Ns, x0s and dxs should have the form:
-            # np.array([[Fx params], [Fy params], [Fz params]])
-            #assert data_length == N[0] * N[1] * N[2]
-                
-            # From the 3D snapshot data, extract only the data for the wanted point [X, Y Z].
-            # Convert the geographical coordinates to indices of the binary data:
-            idx, idy, idz = snapshot_stnloc(N, x0, dx, X, Y, Z)
-            counter = index_convert31(idx, idy, idz, N[0], N[1], N[2])
-            L = 60 + BYTELEN * counter # Left most index of the wanted data.
-            R = L + BYTELEN            # Right most index of the wanted data.
-            g[n] = struct.unpack("d", fileContent[L:R])[0]
-    if return_params == True:
-        return t, g, N, x0, dx
-    else:
-        return t, g
-
-def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt = 0.1, return_params = False):
+def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt = 0.1, 
+                     exact = False, return_params = False):
     """
     This is the most updated function to read snapshot data output by YMAEDA_TOOLS runwaterPML.
-    
     This function should be a huge improvement over read_snapshot_loc3D_fast!!!
+    This function extracts the 3D snapshot for a given X, Y, Z candidate geographical location.
     
     Inputs
     ------
@@ -87,6 +46,13 @@ def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt 
         ending time
     dt: float
         time step
+    exact: bool
+        Flag to indicate whether the exact location should be used.
+        If False, the snapshot at the grid nearest to the wanted
+        location is returned. If True, the snapshot at the exact
+        grid point is returned if possible.
+    return_params: bool
+        Flag to indicate whether the snapshot parameters should be returned.
     
     Returns
     -------
@@ -131,7 +97,7 @@ def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt 
                 
                 # From the 3D snapshot data, extract only the data for the wanted point [X, Y Z].
                 # Convert the geographical coordinates to indices of the binary data:
-                idx, idy, idz = snapshot_stnloc(N, x0, dx, X, Y, Z)
+                idx, idy, idz = snapshot_stnloc(N, x0, dx, X, Y, Z, exact)
                 counter = index_convert31(idx, idy, idz, N[0], N[1], N[2])
                 L = 60 + BYTELEN * counter # Left most index of the wanted data.
                 R = L + BYTELEN            # Right most index of the wanted data.
@@ -142,6 +108,75 @@ def extract_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt 
     else:
         return t, g
 
+def extract_snapshot_1d(snapshot_dir, k = "x", X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt = 0.1, 
+                        exact = False, return_params = False):
+    """
+    This is the 1D version of extract_snapshot.
+    """
+    n_steps = int((t1 - t0) / dt) + 1 # number of time steps
+    g = np.zeros(n_steps) # final output green functions in t; x, y, z
+    t = np.arange(t0, t1 + dt, dt) # final output times 
+    
+    BYTELEN = 8 # snapshot .3db file byte length
+    
+    for n in range(n_steps): # loop over all time steps. One file for one time step...
+        TIME_ZEROS = format(t0 + dt * n, "0.4f")
+        snapshot_file = os.path.join(snapshot_dir, "source.F" + k + ".t" + TIME_ZEROS + ".3db")
+            
+        with open(snapshot_file, mode = "rb") as File:
+            fileContent = File.read()
+            if n == 0:
+                N = struct.unpack("iii", fileContent[0:12]) # number of elements per axis
+                x0 = struct.unpack("ddd", fileContent[12:36]) # starting point of each axis
+                dx = struct.unpack("ddd", fileContent[36:60]) # distance step size per axis
+                data_length = int((len(fileContent) - 60) / BYTELEN)
+                    
+            # At the end of the data extraction process, Ns, x0s and dxs should have the form:
+            # np.array([[Fx params], [Fy params], [Fz params]])
+            #assert data_length == N[0] * N[1] * N[2]
+                
+            # From the 3D snapshot data, extract only the data for the wanted point [X, Y Z].
+            # Convert the geographical coordinates to indices of the binary data:
+            idx, idy, idz = snapshot_stnloc(N, x0, dx, X, Y, Z, exact)
+            counter = index_convert31(idx, idy, idz, N[0], N[1], N[2])
+            L = 60 + BYTELEN * counter # Left most index of the wanted data.
+            R = L + BYTELEN            # Right most index of the wanted data.
+            g[n] = struct.unpack("d", fileContent[L:R])[0]
+    if return_params == True:
+        return t, g, N, x0, dx
+    else:
+        return t, g
+    
+def extract_4pt_snapshot(snapshot_dir, X = 0, Y = 0, Z = 0, t0 = 0.0, t1 = 12.0, dt = 0.1, 
+                         exact = False, return_params = False):
+    """
+    Due to the staggered grid used by YMAEDA_TOOLS PML simulation program, extract_snapshot
+    and extract_snapshot_1d do not work as originally intended. 
+    
+    The x, y and z grids are slightly shifted by about dx / 2 (assuming dx == dy == dz) from 
+    each other. Therefore, instead of extracting the snapshot at a given geographical location,
+    we need to extract the snapshot at 4 grid points around the candidate grid point.
+    
+    E.g. for candidate point [-10900, -121100, 1000], we need to load snapshots at:
+    .Fx snapshot: 
+    [-10900, -121105,  995] >>> [X, Y - dy/2, Z - dz/2]
+    [-10900, -121105, 1005] >>> [X, Y - dy/2, Z + dz/2]
+    [-10900, -121095,  995] >>> [X, Y + dy/2, Z - dz/2]
+    [-10900, -121095, 1005] >>> [X, Y + dy/2, Z + dz/2]
+    .Fy snapshot:
+    [-10905, -121100,  995] >>> [X - dx/2, Y, Z - dz/2]
+    [-10905, -121100, 1005] >>> [X - dx/2, Y, Z + dz/2]
+    [-10895, -121100,  995] >>> [X + dx/2, Y, Z - dz/2]
+    [-10895, -121100, 1005] >>> [X + dx/2, Y, Z + dz/2]
+    .Fz snapshot:
+    [-10905, -121105, 1000] >>> [X - dx/2, Y - dy/2, Z]
+    [-10905, -121095, 1000] >>> [X - dx/2, Y + dy/2, Z]
+    [-10895, -121105, 1000] >>> [X + dx/2, Y - dy/2, Z]
+    [-10895, -121095, 1000] >>> [X + dx/2, Y + dy/2, Z]
+    """
+    
+    return
+    
 def read_snapshot_params(snapshot_file = 'source.Fx.t3.0000.3db'):
     """
     Returns only the parameters of a snapshot .3db file without outputting any data.
@@ -202,9 +237,10 @@ def snapshot_XYZ(N, x0, dx):
     Z = np.array([x0[2] + dx[2] * i for i in range(N[2])])
     return X, Y, Z   
 
-def snapshot_stnloc(N, x0, dx, X_STN, Y_STN, Z_STN):
+def snapshot_stnloc(N, x0, dx, X_STN, Y_STN, Z_STN, exact = False):
     """
-    From the parameters of the snapshot .3db file calculate the nearest grid location for a specified station.
+    From the parameters of the snapshot .3db file calculate the nearest 
+    grid location for a specified station.
     If the specified location is outside the grid, the grid point nearest 
     to the specified location is returned and a warning is given.
     SMN: -11175, -119878, 1317
@@ -225,6 +261,11 @@ def snapshot_stnloc(N, x0, dx, X_STN, Y_STN, Z_STN):
         Station geographical location (Y-coordinate).
     Z_STN: float
         Station geographical location (Z-coordinate).
+    exact: bool
+        Flag to indicate whether the exact location should be used.
+        If False, the snapshot at the grid nearest to the wanted
+        location is returned. If True, the snapshot at the exact
+        grid point is returned if possible.
         
     Returns
     -------
@@ -236,17 +277,36 @@ def snapshot_stnloc(N, x0, dx, X_STN, Y_STN, Z_STN):
         Index along the Z axis corresponding to Z_STN.
     """
     X, Y, Z = snapshot_XYZ(N, x0, dx)
-    # Use .argmin() to find the closest index to the wanted point!
-    # The operator == is not guaranteed to work due to discretization!
-    idx = (abs(X - X_STN)).argmin()
-    idy = (abs(Y - Y_STN)).argmin()
-    idz = (abs(Z - Z_STN)).argmin()
     if not(X.min() <= X_STN <= X.max()):
         print('Warning! X out of range! Returning nearest grid value...')
     if not(Y.min() <= Y_STN <= Y.max()):
         print('Warning! Y out of range! Returning nearest grid value...')
     if not(Z.min() <= Z_STN <= Z.max()):
-        print('Warning! Z out of range! Returning nearest grid value...')    
+        print('Warning! Z out of range! Returning nearest grid value...')  
+    if exact == True:
+        idx = np.where(X == X_STN)[0]
+        idy = np.where(Y == Y_STN)[0]
+        idz = np.where(Z == Z_STN)[0]
+        if len(idx) == 0:
+            print("Warning! Exact X_STN does not exist! Returning nearest grid value...")
+            idx = (abs(X - X_STN)).argmin()
+        else:
+            idx = idx[0]
+        if len(idy) == 0:
+            print("Warning! Exact Y_STN does not exist! Returning nearest grid value...")
+            idy = (abs(Y - Y_STN)).argmin()
+        else:
+            idy = idy[0]
+        if len(idz) == 0:
+            print("Warning! Exact Z_STN does not exist! Returning nearest grid value...")
+            idz = (abs(Z - Z_STN)).argmin()  
+        else:
+            idz = idz[0]
+    elif exact == False:
+        # Use .argmin() to find the closest index to the wanted point!
+        idx = (abs(X - X_STN)).argmin()
+        idy = (abs(Y - Y_STN)).argmin()
+        idz = (abs(Z - Z_STN)).argmin()  
     return idx, idy, idz
 
 def index_convert13(r, Nx, Ny, Nz):

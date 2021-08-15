@@ -48,7 +48,7 @@ F = np.arange(0, df * 4096, df)
 # ------ := - . [ ------ + ------ ].
 #  d k      2   [  d k      d j   ]
 #
-# For Shinmoedake, with 2 stations SMN and SMW with 3 components, we have:
+# E.g. for Shinmoedake, with 2 stations SMN and SMW with 3 components, we have 6 of these equations:
 #
 #         d SM$_ix        d SM$_iy        d SM$_iz        d SM$_xx        d SM$_iy        d SM$_iz
 # sm$_i = -------- M_xx + -------- M_yy + -------- M_zz + -------- M_xy + -------- M_yz + -------- M_zx,
